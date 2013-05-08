@@ -64,7 +64,7 @@ def read_data(path):
 
 def create_dimension(title, values):
     # values are defined like: "foo","bar","zap"
-    values = values.replace('\r\n', '')[1:-1].split('","')
+    values = values.replace('\r\n', '').replace('\n', '')[1:-1].split('","')
     return Dimension(title, values)
 
 
