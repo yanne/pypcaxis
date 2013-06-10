@@ -59,7 +59,7 @@ def parse(path):
 
 def read_data(path):
     return [t.strip() for t in
-            open(path).read().decode('ISO-8859-1').split(';\n')]
+            open(path).read().decode('IBM850').replace(';\r\n', ';\n').split(';\n')]
 
 
 def create_dimension(title, values):
