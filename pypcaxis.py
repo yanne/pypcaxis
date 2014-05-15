@@ -1,7 +1,7 @@
 import re
 from itertools import product
 from operator import mul
-
+from pandas import DataFrame
 
 class Dimension(object):
 
@@ -59,13 +59,51 @@ def parse(path):
 
 def read_data(path):
     return [t.strip() for t in
-            open(path).read().decode('ISO-8859-1').split(';')]
+            open(path).read().decode('IBM850').replace(';\r\n', ';\n').split(';\n')]
 
 
 def create_dimension(title, values):
     # values are defined like: "foo","bar","zap"
-    values = values.replace('\r\n', '')[1:-1].split('","')
+    values = values.replace('\r\n', '').replace('\n', '')[1:-1].split('","')
     return Dimension(title, values)
+
+def to_pandas_df(table):
+    """Creates a Pandas DataFrame with the data in the table"""
+    largs = table.dimensions
+    total = 1
+    ldims = []
+
+    for dim in largs:
+        ldims.append(len(dim))
+        total *= len(dim)
+
+    vresult = total * [0]
+    
+    for i, dim in enumerate(largs):
+        ldim = ldims[i]
+        tblo = total / ldim
+        if i < (len(ldims) - 1):
+            rdim = 1
+            for x in range(i, len(ldims) - 1):
+                rdim *= ldims[x+1]
+        else:
+            rdim = 1
+        for udi in range(ldim):
+            if i == 0:
+                for j in range(rdim):
+                    vresult[j+(udi * rdim)]=[dim.values[udi]]
+            else:
+                for j in range(0, total, ldim * rdim):
+                    for k in range(rdim):
+                        vresult[j + k + (udi * rdim)].extend([dim.values[udi]])
+    for i, fila in enumerate(vresult):
+        fila.extend([table.data[i]])
+
+    colnames = [dim.title for dim in table.dimensions]
+    colnames.extend(['values'])
+
+    return DataFrame(vresult, columns=colnames)
+    
 
 
 if __name__ == '__main__':
